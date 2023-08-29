@@ -27,14 +27,24 @@ print(DataProducao)
 ###########################
 
 yf.pdr_override()
+#Procurar ultimo fechamento no yahoo
+simbolo = "^BVSP"
+# Obtenha os dados históricos para o índice Bovespa
+acao = yf.Ticker(simbolo)
+dados_ultimos = acao.history(period="1d")  # 1 dia de dados
+# Converta as datas do Yahoo Finance para não ter informações de fuso horário
+dados_ultimos.index = dados_ultimos.index.tz_localize(None)
+# Exiba a data do último fechamento do índice Bovespa
+DataUltimoFechamento = dados_ultimos.index[0].strftime("%Y-%m-%d")
+print(f"A data do último fechamento de {simbolo} foi: {DataUltimoFechamento}")
 # Definir o intervalo de datas
 start_date = '2022-08-01'
-end_date = '2023-08-28'
+end_date = DataUltimoFechamento
 symbols = DataProducao  # Certifique-se de que DataProducao contenha os símbolos correto
 
 data_dict = {}
 for symbol in symbols:
-    data = web.get_data_yahoo(symbol, start=start_date, end=end_date)['Close']
+    data = web.get_data_yahoo(symbol, start=start_date, end=end_date,period="1d")['Close']
     data_dict[symbol] = data
 
 # Crie um DataFrame a partir do dicionário
@@ -50,39 +60,19 @@ excel_filename = 'dados_de_fechamento.xlsx'
 Portofilio.to_excel(excel_filename, index=True)  # Defina index=False se não quiser incluir o índice no Excel
 
 print(f'Dados salvos em "{excel_filename}" na mesma pasta do script.')
-
-# # Carregar o novo portfólio a partir do arquivo Excel
-
 # Carregar o novo portfólio a partir do arquivo Excel
 excel_filename = 'dados_de_fechamento.xlsx'
 novo_portifolio = pd.read_excel(excel_filename, header=0)
 
-# Definir a coluna de datas como o índice do DataFrame
 # Defina a coluna "Date" como índice
 novo_portifolio.set_index("Date", inplace=True)
 
 # Exibir o DataFrame
 print(novo_portifolio)
-
-#Verificar atualizações
 # Encontre a data mais recente no portfólio
 DataMaisRecentePortifolio = novo_portifolio.index[-1]
 print("Data mais recente no portfólio:", DataMaisRecentePortifolio)
-
-# Símbolo do índice Bovespa
-simbolo = "^BVSP"
-
-# Obtenha os dados históricos para o índice Bovespa
-acao = yf.Ticker(simbolo)
-dados_ultimos = acao.history(period="1d")  # 1 dia de dados
-
-# Converta as datas do Yahoo Finance para não ter informações de fuso horário
-dados_ultimos.index = dados_ultimos.index.tz_localize(None)
-
-# Exiba a data do último fechamento do índice Bovespa
-DataUltimoFechamento = dados_ultimos.index[0].strftime("%Y-%m-%d")
 print(f"A data do último fechamento de {simbolo} foi: {DataUltimoFechamento}")
-
 # Compare as datas para verificar se os dados estão atualizados
 if DataMaisRecentePortifolio >= dados_ultimos.index[0]:
     print("Os dados estão atualizados.")
